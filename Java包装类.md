@@ -64,5 +64,38 @@ IntegerCache是Integer类中的静态内部类，用于缓存数据便于节省�
 事实上,只有Integer、Short、Byte、Character、Long这几个类的valueOf才会如此.
 而Double、Float的valueOf则会为每个对象分配不同的内存空间
 
-
 ### 除了Integer之外，在其他包装类(例如：Byte，Short，Long等)中也存在类似的设计。
+
+
+
+## Integer 类面试题总结
+
+只要有基本数据类型，== 判断的就是值是否相等
+
+```java
+//只要有基本数据类型，== 判断的就是值是否相等
+Integer a = 127;
+int b = 127;
+System.out.println(a==b);  //true
+Integer i9 = 128; 
+Integer i10 = new Integer(128);
+System.out.println(i9 == i10); //true
+
+//这个是new出来的，new出来的都是不同的对象 == 判断的就是两个对象是否相等，所以是fasle
+Integer i1 = new Integer(1);
+Integer i2 = new Integer(1);
+System.out.println(i1 == i2); //false  
+
+//这个底层用的是Integer.valueOf() 使用缓存的条件是-128～127 
+Integer i5 = 127; 
+Integer i6 = 127;
+System.out.println(i5 == i6); //true
+
+//一个使用的是Integer.valueOf() 一个是new出来的 肯定是两个不同的对象
+Integer i7 = 127; 
+Integer i8 = new Integer(127);
+System.out.println(i7 == i8); //fasle
+
+
+```
+
