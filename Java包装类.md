@@ -27,6 +27,7 @@ int b = a;
 通过以下代码可以看出他是返回了一个Integer的对象来替代int，改方法会缓存-128～127之间的值，如果值超过了的话就返回一个新的对象。如果没有超过的话就返回缓存中的值
 IntegerCache.cache是一个数组，里面有对应的值
 IntegerCache是Integer类中的静态内部类，用于缓存数据便于节省内存、提高性能。
+这个缓冲池的下界是 - 128，上界默认是 127，但是这个上界是可调的，在启动 jvm 的时候，通过 -XX:AutoBoxCacheMax= 来指定这个缓冲池的大小。
 ```java
 //这是jdk源码中创建cache数组的代码
                Integer[] c = new Integer[size];
