@@ -107,3 +107,61 @@ ThreadLocal的数量肯定是小于Thread的
 事实上，在ThreadLocalMap中set/getEntry方法中会对key为null（也就是Thread Local为null）进行判断，如果为null的话，那么对value置为null的
 
 这就意味着使用完ThreadLocal，CurrentThread依然运行的前提下，就算忘记调用remove方法，弱引用比强引用可以多一层保障；弱引用的ThreadLocal会被回收，对应的value在下一次Thread LocalMap调用set、get、remove中的任一方法的时候会被清除，从而避免内存泄漏。
+
+
+
+
+
+
+
+
+
+## ThreadLocal核心场景介绍
+
+ThreaLocal作用在每个线程内都都需要独立的保存信息，这样就方便同一个线程的其他方法获取到该信息的场景，由于每一个线程获取到的信息可能都是不一样的，前面执行的方法保存了信息之后，后续方法可以通过ThreadLocal可以直接获取到，避免了传参，这个类似于全局变量的概念。比如像用户登录令牌解密后的信息传递、用户权限信息、从用户系统中获取到的用户名
+![img](ThreadLocal.assets/80b97bb36d604eba9d63337c7b0056fd~tplv-k3u1fbpfcp-watermark.awebp)
+
+如上图所示，就好比如线程A的方法一创建了变量A，方法二是跟方法一在同一个线程内，那么创建的变量A就是共享的。
+
+```java
+#用户微服务配置token解密信息传递例子
+public static ThreadLocal<LoginUser> threadLocal = new ThreadLocal<>();
+                LoginUser loginUser = new LoginUser();
+                loginUser.setId(id);
+                loginUser.setName(name);
+                loginUser.setMail(mail);
+                loginUser.setHeadImg(headImg);
+                threadLocal.set(loginUser);
+            
+后续想直接获取到直接threadLocal.getxxx就可以了
+
+```
+
+#### **如何使用ThreadLocal来解决线程安全的问题**
+
+在我们平常的SpringWeb项目中，我们通常会把业务分成Controller、Service、Dao等等，也知道注解@Autowired默认使用单例模式。那有没有想过，当不同的请求线程进来后，因为Dao层使用的是单例，那么负责连接数据库的Connection也只有一个了，这时候如果请求的线程都去连接数据库的话，就会造成这个线程不安全的问题，Spring是怎样来解决的呢？
+
+在Dao层里装配的Connection线程肯定是安全的，解决方案就是使用ThreadLocal方法。当每一个请求线程使用Connection的时候，都会从ThreadLocal获取一次，如果值为null，那就说明没有对数据库进行连接，连接后就会存入到 ThreadLocal里，这样一来，每一个线程都保存有一份属于自己的Connection。每一线程维护自己的数据，达到线程的隔离效果。
+
+#### **ThreadLocal慎用的场景**
+
+第一点（线程池里线程调用ThreadLocal）：因为线程池里对线程的管理都是线程复用的方法，所以在线程池里线程非常难结束，更有可能的是永远不会结束。这就意味着线程的持续时间是不可估测的，甚至会与JVM的生命周期一致。
+
+第二点（在异步程序里）：ThreadLocal的参数传递是不可靠的，因为线程将请求发送后，不会在等待远程返回结果就继续向下运行了，真正的返回结果得到以后，可能是其它的线程在处理。
+
+第三点：在使用完ThreadLocal，推荐要调用一下remove（）方法，这样会防止内存溢出这种情况的发生，因为ThreadLocal为弱引用。如果ThreadLocal在没有被外部强引用的情况下，在垃圾回收的时候是会被清理掉的，如果是强引用那就不会被清理。(这句话可能有点问题，是强引用也不会解决内存溢出的问题)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
