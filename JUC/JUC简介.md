@@ -6,6 +6,8 @@
 
 Thread.State
 
+在调用线程的start方法的时候，线程不一定会马上创建，start方法内的start是nativa的，靠的是操作系统，因此就不是java能够控制的而是操作系统控制的。
+
 | 状态          | 解释     |
 | ------------- | -------- |
 | NEW           | 新建     |
@@ -62,3 +64,113 @@ Lock锁实现提供了比使用同步方法和语句可以获得更广泛的锁�
 Lock接口的实现类<code>ReentrantLock</code>,<code>ReentrantReadWriteLock.ReadLock</code>,<code>ReentrantReadWriteLock.WriteLock</code>
 
 ReentrantLock:可重入锁，
+
+Lock 锁
+
+```java
+class LTicket {
+    private int number = 30;
+    //创建可重入锁
+    private final ReentrantLock lock = new ReentrantLock();
+
+    //买票方法
+    public void sale() {
+        //上锁
+        lock.lock();
+        try {
+            if (number > 0) {
+                System.out.println(Thread.currentThread().getName() + "卖出" + (number--) + "剩余" + number);
+            }
+        } finally {
+            //解锁 解锁写在finally中
+            lock.unlock();
+        }
+    }
+}
+
+public class LSaleTicket {
+
+
+    public static void main(String[] args) {
+        LTicket ticket = new LTicket();
+        new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                ticket.sale();
+            }
+        }, "aa").start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                ticket.sale();
+            }
+        }, "bb").start();
+
+
+        new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                ticket.sale();
+            }
+        }, "cc").start();
+    }
+}
+```
+
+
+
+多线程的通信
+
+设计两个方法对一个变量进行操作，一个方法是对变量执行+1操作，另一个方法是对变量进行-1操作，当变量执行+1操作时候如果变量为1就等待，当变量为0的时候就加一并唤醒正在等待-1的线程
+
+```java
+class Share {
+    private int number = 0;
+
+    //    +1
+    public synchronized void incr() throws InterruptedException {
+        //如果number不是0 那就等待  当他为0的时候再加一
+        if (number != 0) {
+            this.wait();
+        }
+        //如果number的值为0 就加一
+        number++;
+        System.out.println(Thread.currentThread().getName() + "::" + number);
+        //通知其他线程
+        this.notifyAll();
+    }
+
+    public synchronized void decr() throws InterruptedException {
+        if (number != 1) {
+            this.wait();
+        }
+        number--;
+        System.out.println(Thread.currentThread().getName() + "::" + number);
+        this.notifyAll();
+    }
+}
+
+public class ThreadDemo1 {
+    //    创建多个线程调用资源类的操作线程
+    public static void main(String[] args) {
+        Share share = new Share();
+        new Thread(() -> {
+            for (int i = 0; i < 11; i++) {
+                try {
+                    share.incr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "aa").start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 11; i++) {
+                try {
+                    share.decr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "bb").start();
+    }
+}
+```
