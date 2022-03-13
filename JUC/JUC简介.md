@@ -174,3 +174,29 @@ public class ThreadDemo1 {
     }
 }
 ```
+
+关键字 synchronized 与 wait()/notify()这两个方法一起使用可以实现等待/通知模式，Lock 锁的 newContition()方法返回 Condition 对象，Condition 类也可以实现等待/通知模式.用 notify()通知时，JVM 会随机唤醒某个等待的线程， 使用 Condition 类可以进行选择性通知， Condition 比较常用的两个方法：await()会使当前线程等待,同时会释放锁,当其他线程调用 signal()时,线程会重新获得锁并继续执行.signal()用于唤醒一个等待的线程
+
+```java
+//+1
+public void incr() throws InterruptedException {
+    //上锁
+    lock.lock();
+    try {
+        //判断
+        while (number != 0) {
+            condition.await();
+        }
+        //干活
+        number++;
+        System.out.println(Thread.currentThread().getName()+" :: "+number);
+        //通知
+        condition.signalAll();
+    }finally {
+        //解锁
+        lock.unlock();
+    }
+}
+
+```
+
