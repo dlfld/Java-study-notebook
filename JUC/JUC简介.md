@@ -57,6 +57,14 @@ public static void main(String[] args) {
 + Lock不是java语言内置的，synchronized是Java语言的关键字，因此是内置特性。Lock是一个类，通过这个类可以实现同步访问。
 + Lock和synchronized有一点非常大的不同，采用synchronized不需要用户去手动释放锁，当synchronized方法或者synchronized代码块执行完之后，系统会自动让线程释放对锁的占用；而Llock则必须要去用户手动释放锁，如果没有主动释放锁，就可能导致死锁现象。
 
+synchronized实现同步的基础：Java中的每一个对象都可以作为锁
+
+具体表现为以下三种形式
+
++ 对于普通同步方法，锁是当前实例对象
++ 对于静态同步方法，锁是当前类的Class对象
++ 对于同步方法块，锁是synchronized括号里配置的对象
+
 ## Lock接口
 
 Lock锁实现提供了比使用同步方法和语句可以获得更广泛的锁操作。他们允许更灵活的结构，可能具有非常不同的属性，并且可能支持多个关联的条件对象。Lock提供了比synchronized更多的功能。
